@@ -43,7 +43,7 @@ def main():
 
     sender_email = os.environ.get("SENDER_EMAIL") or input("Type your email and press enter: ")
     print(f"Sender email: {sender_email}")
-    password = os.environ.get("EMAIL_PASSWORD") or getpass("Type app password and press enter: ")
+    password = os.environ.get("GMAIL_APP_PASSWORD") or getpass("Type app password and press enter: ")
 
     config = load_config("email_config.json")
     message = create_message(sender_email, config)
