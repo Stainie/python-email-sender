@@ -55,8 +55,10 @@ def main():
             reader = csv.reader(file)
             next(reader)  # Skip header row (column names)
             for name, email in reader:
-                print(f"Sending email to {name}")
-                server.sendmail(sender_email, email, message.as_string())
+                print(f"Sending email to {name}, {email}")
+                rcpt = [] + [] + [email]
+                message["To"] = email
+                server.sendmail(sender_email, rcpt, message.as_string())
 
 if __name__ == "__main__":
     main()
