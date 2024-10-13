@@ -2,7 +2,7 @@
 A simple script for sending emails with attachment to several recipients.
 
 # message format
-Your `email_config.json` should be structured in the following way:
+Add `email_config.json` file to the root of your project. It should be structured in the following way:
 ```
 {
     'subject': '...',
@@ -16,8 +16,11 @@ Your `email_config.json` should be structured in the following way:
 }
 ```
 
+# attachments
+Make sure to add your attachment to the root of the project
+
 # email list format
-name,email
+Name,Email
 
 Recepient1, recepient@email.com
 

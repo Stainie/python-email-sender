@@ -41,9 +41,9 @@ def main():
     smtp_server = "smtp.gmail.com"
     load_dotenv()
 
-    sender_email = os.environ.get("SENDER_EMAIL")
+    sender_email = os.environ.get("SENDER_EMAIL") or input("Type your email and press enter: ")
     print(f"Sender email: {sender_email}")
-    password = getpass("Type password and press enter: ")
+    password = os.environ.get("EMAIL_PASSWORD") or getpass("Type app password and press enter: ")
 
     config = load_config("email_config.json")
     message = create_message(sender_email, config)
