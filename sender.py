@@ -1,86 +1,62 @@
 import csv
+import json
 from email import encoders
-import email
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from getpass import getpass
-import smtplib, ssl
+import smtplib
+import ssl
+import os
+from dotenv import load_dotenv
 
-port = 465
-smtp_server = "smtp.gmail.com"
+def load_config(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
 
-sender_email = "burningleafofficial@gmail.com"
+def create_message(sender_email, config):
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["Subject"] = config["subject"]
 
-password = getpass("Type password and press enter: ")
+    body = config["body"].format(**config["links"])
+    message.attach(MIMEText(body, "plain"))
 
-subject = "Greetings from Burning Leaf!"
+    for attachment_file in config["attachments"]:
+        with open(attachment_file, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+        
+        encoders.encode_base64(part)
+        part.add_header(
+            "Content-Disposition",
+            f"attachment; filename= {attachment_file}",
+        )
+        message.attach(part)
 
-message = MIMEMultipart()
-message["From"] = sender_email
-message["Subject"] = subject
+    return message
 
-hyperlink1 = MIMEText(u'<a href="https://www.youtube.com/watch?v=m7_FyMhcZoY">Youtube</a>','html')
-hyperlink2 = MIMEText(u'<a href="https://onerpm.link/223036832451">streaming services.</a>','html')
-hyperlink3 = MIMEText(u'<a href="https://www.youtube.com/watch?v=r3Beyijp0vM&list=PLJG81nC446VyPzlQsdtK5vmg20rNitMwV">here.</a>','html')
+def main():
+    port = 465
+    smtp_server = "smtp.gmail.com"
+    load_dotenv()
 
-text1 =  MIMEText("""\
-Greetings!
+    sender_email = os.environ.get("SENDER_EMAIL")
+    print(f"Sender email: {sender_email}")
+    password = getpass("Type password and press enter: ")
 
-We are Burning Leaf, an alt/groove metal band from Pirot, Serbia, and we've just released our debut album called "Hold the Tides Away".
-We'd be incredibly thankful if you could share it, or even review it if you'd like. 
-You can find the album in full on """) 
-text2 = MIMEText(" as well as on all bigger ")
-text3 = MIMEText(" We also have a playlist with stylized lyrics videos for all the songs, which you can find ")
-text4 = MIMEText("""
-If you have any questions, or if you're interested and you'd like to find out the story behind the album itself, feel free to contact us! We're more than eager to answer all the questions you may have.
+    config = load_config("email_config.json")
+    message = create_message(sender_email, config)
 
-In case you require them, you can find our album cover image and our band photo in the attachments below.
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        with open("email_list_sr.csv") as file:
+            reader = csv.reader(file)
+            next(reader)  # Skip header row (column names)
+            for name, email in reader:
+                print(f"Sending email to {name}")
+                server.sendmail(sender_email, email, message.as_string())
 
-Thank you for your time!
-
-All the best.
-
--Burning Leaf
-    """)
-
-message.attach(text1)
-message.attach(hyperlink1)
-message.attach(text2)
-message.attach(hyperlink2)
-message.attach(text3)
-message.attach(hyperlink3)
-message.attach(text4)
-
-attachments = ["BurningLeaf_Landscape.png", "BurningLeaf_CloseUp.jpg"]
-
-# Loop through image files in binary mode
-for at in attachments:
-    with open(at, "rb") as attachment:
-    # Add file as application/octet-stream
-    # Email client can usually download this automatically as attachment
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-
-    # Encode file in ASCII characters to send by email
-    encoders.encode_base64(part)
-
-    part.add_header(
-    "Content-Disposition",
-    f"attachment; filename= {at}",
-    )
-    message.attach(part)
-
-text = message.as_string()
-
-# Log in to server using secure context and send email
-context = ssl.create_default_context()
-with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-    server.login(sender_email, password)
-    with open("email_list.csv") as file:
-        reader = csv.reader(file)
-        next(reader)  # Skip header row
-        for name, email in reader:
-            print(f"Sending email to {name}")
-            # message["To"] = email
-            server.sendmail(sender_email, email, text)
+if __name__ == "__main__":
+    main()
