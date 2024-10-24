@@ -45,7 +45,7 @@ def main():
     print(f"Sender email: {sender_email}")
     password = os.environ.get("GMAIL_APP_PASSWORD") or getpass("Type app password and press enter: ")
 
-    config = load_config("email_config.json")
+    config = load_config("email_config_sr.json")
     message = create_message(sender_email, config)
 
     context = ssl.create_default_context()
